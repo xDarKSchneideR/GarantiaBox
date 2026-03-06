@@ -28,7 +28,7 @@
             
             /* Alturas fijas */
             --header-height: 60px;
-            --search-height: 235px;
+            --search-height: 280px;  /* ✅ AUMENTADO de 235px a 280px */
             --footer-height: 192px;
         }
 
@@ -166,7 +166,7 @@
         .search-input-wrapper {
             display: flex;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .search-input-wrapper input {
@@ -185,6 +185,7 @@
             border-color: var(--primary);
         }
 
+        /* ✅ FILTROS DE FECHA MEJORADOS */
         .search-filters {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -192,25 +193,73 @@
             margin-bottom: 10px;
         }
 
-        .search-filters input, .search-filters select {
-            padding: 10px 12px;
+        .search-filters .date-input-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-filters .date-label {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            font-weight: 500;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .search-filters input[type="date"],
+        .search-filters select {
+            padding: 11px 14px;
             border: 2px solid var(--border);
             border-radius: var(--radius-sm);
             font-size: 0.85rem;
             font-family: inherit;
             background: var(--bg);
             color: var(--text);
+            width: 100%;
+        }
+
+        .search-filters input[type="date"]:focus,
+        .search-filters select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Fix para placeholders de fecha en móviles */
+        .search-filters input[type="date"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .search-filters input[type="date"]::-webkit-datetime-edit-text,
+        .search-filters input[type="date"]::-webkit-datetime-edit-month-field,
+        .search-filters input[type="date"]::-webkit-datetime-edit-day-field,
+        .search-filters input[type="date"]::-webkit-datetime-edit-year-field {
+            color: var(--text-light);
+            opacity: 0.7;
+        }
+
+        .search-filters input[type="date"]:valid::-webkit-datetime-edit-text,
+        .search-filters input[type="date"]:valid::-webkit-datetime-edit-month-field,
+        .search-filters input[type="date"]:valid::-webkit-datetime-edit-day-field,
+        .search-filters input[type="date"]:valid::-webkit-datetime-edit-year-field {
+            color: var(--text);
+            opacity: 1;
         }
 
         .btn-clear-filters {
             width: 100%;
-            padding: 8px;
+            padding: 9px;
             background: transparent;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             color: var(--text-light);
             font-size: 0.85rem;
             cursor: pointer;
+            margin-top: 8px;
         }
 
         /* ÁREA DE PRODUCTOS CON SCROLL */
@@ -558,6 +607,35 @@
             .modal { align-items: center; }
             .modal.active .modal-content { transform: scale(0.95); }
         }
+
+        /* ✅ RESPONSIVE PARA MÓVILES PEQUEÑOS */
+        @media (max-width: 360px) {
+            .search-bar {
+                padding: 14px 16px;
+            }
+            
+            .search-filters input[type="date"],
+            .search-filters select {
+                font-size: 0.8rem;
+                padding: 10px 12px;
+            }
+            
+            .search-filters .date-label {
+                font-size: 0.65rem;
+            }
+            
+            .search-filters {
+                gap: 8px;
+            }
+        }
+
+        /* ✅ iOS SAFARI - EVITAR ZOOM AUTOMÁTICO */
+        @supports (-webkit-touch-callout: none) {
+            .search-filters input[type="date"],
+            .search-filters select {
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -614,15 +692,25 @@
             <span class="stats" id="stats-text">0 productos</span>
         </header>
 
-        <!-- BUSCADOR FIJO -->
+        <!-- ✅ BUSCADOR FIJO CORREGIDO -->
         <div class="search-bar">
             <div class="search-input-wrapper">
                 <input type="text" id="search-text" placeholder="🔍 Buscar producto..." oninput="renderItems()">
             </div>
+            
+            <!-- FILTROS DE FECHA CON LABELS CLAROS -->
             <div class="search-filters">
-                <input type="date" id="filter-date-start" onchange="renderItems()">
-                <input type="date" id="filter-date-end" onchange="renderItems()">
+                <div class="date-input-wrapper">
+                    <label class="date-label">📅 Desde (inicio)</label>
+                    <input type="date" id="filter-date-start" onchange="renderItems()">
+                </div>
+                <div class="date-input-wrapper">
+                    <label class="date-label">📅 Hasta (fin)</label>
+                    <input type="date" id="filter-date-end" onchange="renderItems()">
+                </div>
             </div>
+            
+            <!-- OTROS FILTROS -->
             <div class="search-filters">
                 <select id="sort-by" onchange="renderItems()">
                     <option value="newest">Más recientes</option>
@@ -637,8 +725,9 @@
                     <option value="archived">Archivados</option>
                 </select>
             </div>
+            
             <button class="btn-clear-filters" onclick="clearFilters()">
-                Limpiar filtros
+                🧹 Limpiar filtros
             </button>
         </div>
 
@@ -660,7 +749,6 @@
                 <button class="btn btn-success" onclick="exportData()">💾 Backup</button>
                 <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📂 Importar</button>
                 <input type="file" id="import-file" onchange="importData(this)" style="display: none" accept=".json">
-                <!-- ✅ BOTÓN CAMBIAR PIN -->
                 <button class="btn btn-secondary" onclick="openPinModal()">🔐 Cambiar PIN</button>
                 <button class="btn btn-danger btn-logout" onclick="logout()" style="grid-column: span 2;">🔒 Cerrar sesión</button>
             </div>
@@ -872,7 +960,6 @@
                 if(pin === USER_PIN) {
                     if(navigator.vibrate) navigator.vibrate(50);
                     
-                    // Detectar si es primera vez (PIN por defecto)
                     const isDefaultPin = localStorage.getItem('garantiaBox_pin') === null;
                     
                     setTimeout(() => {
@@ -885,7 +972,6 @@
                             renderItems();
                         }
                         
-                        // Si es primera vez, ofrecer cambiar PIN
                         if(isDefaultPin) {
                             setTimeout(() => {
                                 if(confirm('🔐 Es tu primera vez. ¿Quieres establecer un PIN personalizado?')) {
@@ -1198,13 +1284,11 @@
             const allItems = getItems();
             const today = new Date().toISOString().split('T')[0];
             
-            // Alerta de caducidad próxima
             const expiringSoon = allItems.filter(item => {
                 const daysLeft = (new Date(item.endWarranty) - new Date()) / (1000 * 60 * 60 * 24);
                 return !item.archived && daysLeft > 0 && daysLeft <= 30;
             });
 
-            // Actualizar header
             const totalActive = allItems.filter(i => !i.archived && i.endWarranty >= today).length;
             document.getElementById('stats-text').textContent = `${totalActive} activo${totalActive !== 1 ? 's' : ''}`;
             
@@ -1216,7 +1300,6 @@
                 header.classList.remove('warning');
             }
 
-            // ✅ FILTRO CORREGIDO: "Activos" excluye archivados Y caducados
             let filteredItems = allItems.filter(item => {
                 const isExpired = new Date(item.endWarranty) < new Date(today);
                 
@@ -1230,7 +1313,6 @@
                 return true;
             });
 
-            // Ordenar
             filteredItems.sort((a, b) => {
                 if(sortBy === 'newest') return b.id - a.id;
                 if(sortBy === 'oldest') return a.id - b.id;
