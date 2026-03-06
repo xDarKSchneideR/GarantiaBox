@@ -26,7 +26,7 @@
             --radius: 12px;
             --radius-sm: 8px;
             
-            /* Alturas fijas - AJUSTADAS POR EL USUARIO */
+            /* Alturas fijas */
             --header-height: 60px;
             --search-height: 235px;
             --footer-height: 192px;
@@ -213,31 +213,6 @@
             cursor: pointer;
         }
 
-        /* TABS DE FILTRO */
-        .filter-tabs {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .filter-tab {
-            flex: 1;
-            padding: 8px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-light);
-            font-size: 0.8rem;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .filter-tab.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
         /* ÁREA DE PRODUCTOS CON SCROLL */
         .products-area {
             flex: 1;
@@ -298,8 +273,8 @@
         .card-info strong { color: var(--text); }
         .card-info .days-left { font-weight: 600; }
         .card-info .days-left.positive { color: var(--success); }
-        .card-info .days-left.negative { color: var(--danger); }
         .card-info .days-left.warning { color: var(--warning); }
+        .card-info .days-left.negative { color: var(--danger); }
 
         .card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
         .card-actions .btn { flex: 1; min-width: 80px; }
@@ -613,8 +588,8 @@
                 <span>Entrar</span>
             </button>
             
-            <button class="btn btn-ghost btn-full" onclick="resetPin()" style="margin-top: 12px; font-size: 0.8rem;">
-                🔁 Resetear PIN
+            <button class="btn btn-ghost btn-full" onclick="resetPinFromLogin()" style="margin-top: 12px; font-size: 0.8rem;">
+                🔁 Resetear PIN a 1234
             </button>
         </div>
     </div>
@@ -685,7 +660,9 @@
                 <button class="btn btn-success" onclick="exportData()">💾 Backup</button>
                 <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📂 Importar</button>
                 <input type="file" id="import-file" onchange="importData(this)" style="display: none" accept=".json">
-                <button class="btn btn-danger btn-logout" onclick="logout()">🔒 Cerrar sesión</button>
+                <!-- ✅ BOTÓN CAMBIAR PIN -->
+                <button class="btn btn-secondary" onclick="openPinModal()">🔐 Cambiar PIN</button>
+                <button class="btn btn-danger btn-logout" onclick="logout()" style="grid-column: span 2;">🔒 Cerrar sesión</button>
             </div>
         </footer>
 
@@ -742,12 +719,20 @@
                 
                 <div class="input-group">
                     <label>Nuevo PIN (4 dígitos)</label>
-                    <input type="password" id="new-pin" maxlength="4" inputmode="numeric" placeholder="• • • •" 
+                    <input type="password" 
+                           id="new-pin" 
+                           maxlength="4" 
+                           inputmode="numeric" 
+                           placeholder="• • • •" 
                            style="text-align: center; font-size: 1.5rem; letter-spacing: 8px;">
                 </div>
                 
                 <button class="btn btn-primary btn-full" onclick="saveNewPin()">
                     💾 Guardar PIN
+                </button>
+                
+                <button class="btn btn-ghost btn-full" onclick="resetPin()" style="margin-top: 10px; color: var(--danger);">
+                    🔁 Resetear a 1234
                 </button>
             </div>
         </div>
@@ -759,7 +744,7 @@
         // CONFIGURACIÓN Y ESTADO GLOBAL
         // ============================================
         let USER_PIN = localStorage.getItem('garantiaBox_pin') || '1234';
-        let currentFilter = 'active'; // active, expired, archived, all
+        let currentFilter = 'active';
         const ONBOARDING_SLIDES = [
             {
                 icon: '📦',
@@ -768,7 +753,6 @@
             },
             {
                 icon: '📷',
-                text: 'Añade fotos de tus tickets',
                 title: 'Fotos de Tickets',
                 text: 'Toma fotos de tus recibos y guárdalas con cada producto. Las imágenes se comprimen automáticamente.'
             },
@@ -888,15 +872,26 @@
                 if(pin === USER_PIN) {
                     if(navigator.vibrate) navigator.vibrate(50);
                     
+                    // Detectar si es primera vez (PIN por defecto)
+                    const isDefaultPin = localStorage.getItem('garantiaBox_pin') === null;
+                    
                     setTimeout(() => {
                         document.getElementById('login-screen').classList.remove('active');
                         
-                        // Verificar onboarding
                         if(!localStorage.getItem('garantiaBox_onboarded')) {
                             showOnboarding();
                         } else {
                             document.getElementById('app-screen').classList.add('active');
                             renderItems();
+                        }
+                        
+                        // Si es primera vez, ofrecer cambiar PIN
+                        if(isDefaultPin) {
+                            setTimeout(() => {
+                                if(confirm('🔐 Es tu primera vez. ¿Quieres establecer un PIN personalizado?')) {
+                                    openPinModal();
+                                }
+                            }, 1000);
                         }
                         
                         pinInput.value = '';
@@ -914,7 +909,7 @@
             }, 300);
         }
 
-        function resetPin() {
+        function resetPinFromLogin() {
             if(confirm('⚠️ ¿Resetear PIN a 1234? Se perderá el PIN personalizado.')) {
                 localStorage.removeItem('garantiaBox_pin');
                 USER_PIN = '1234';
@@ -955,28 +950,35 @@
             const newPin = document.getElementById('new-pin').value.trim();
             
             if(!newPin || newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
-                showToast('❌ El PIN debe ser 4 dígitos', 'error');
+                showToast('❌ El PIN debe ser 4 dígitos numéricos', 'error');
                 return;
             }
             
             localStorage.setItem('garantiaBox_pin', newPin);
             USER_PIN = newPin;
             closeModalPin();
-            showToast('✅ PIN actualizado correctamente', 'success');
+            showToast('✅ PIN actualizado a ' + newPin, 'success');
+        }
+
+        function resetPin() {
+            if(confirm('⚠️ ¿Resetear PIN a 1234?')) {
+                localStorage.removeItem('garantiaBox_pin');
+                USER_PIN = '1234';
+                closeModalPin();
+                showToast('✅ PIN reseteado a 1234', 'success');
+            }
         }
 
         function showDonate() {
             showToast('☕ ¡Gracias por apoyar!', 'success', 2000);
-    
+            
             setTimeout(() => {
-                // Abrir PayPal en nueva pestaña
                 window.open('https://www.paypal.com/paypalme/DarkSchneideR', '_blank');
-        
-                // Opcional: ofrecer cambiar PIN después de donar
+                
                 setTimeout(() => {
                     if(confirm('¿Quieres cambiar tu PIN de acceso?')) {
                         openPinModal();
-                    }       
+                    }
                 }, 1500);
             }, 800);
         }
@@ -1203,7 +1205,7 @@
             });
 
             // Actualizar header
-            const totalActive = allItems.filter(i => !i.archived).length;
+            const totalActive = allItems.filter(i => !i.archived && i.endWarranty >= today).length;
             document.getElementById('stats-text').textContent = `${totalActive} activo${totalActive !== 1 ? 's' : ''}`;
             
             const header = document.getElementById('app-header');
@@ -1214,23 +1216,17 @@
                 header.classList.remove('warning');
             }
 
-            // Filtrar por estado (tabs) - LÓGICA CORREGIDA
+            // ✅ FILTRO CORREGIDO: "Activos" excluye archivados Y caducados
             let filteredItems = allItems.filter(item => {
                 const isExpired = new Date(item.endWarranty) < new Date(today);
-    
-                // Filtro por pestaña de estado
+                
                 if(statusFilter === 'active' && (item.archived || isExpired)) return false;
                 if(statusFilter === 'archived' && !item.archived) return false;
                 if(statusFilter === 'expired' && (item.archived || !isExpired)) return false;
-                // 'all' muestra todo sin filtrar
-    
-                // Filtro por búsqueda de texto
+                
                 if(searchText && !item.name.toLowerCase().includes(searchText)) return false;
-    
-                // Filtro por rango de fechas (fecha de fin de garantía)
                 if(dateStart && item.endWarranty < dateStart) return false;
                 if(dateEnd && item.endWarranty > dateEnd) return false;
-    
                 return true;
             });
 
