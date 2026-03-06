@@ -28,8 +28,9 @@
             
             /* Alturas fijas */
             --header-height: 60px;
-            --search-height: 280px;  /* ✅ AUMENTADO de 235px a 280px */
-            --footer-height: 192px;
+            --search-height: 0px;  /* ✅ OCULTO POR DEFECTO */
+            --search-height-expanded: 240px;  /* ✅ ALTURA CUANDO SE EXPANDE */
+            --footer-height: 140px;  /* ✅ REDUCIDO para más espacio */
         }
 
         /* MODO OSCURO */
@@ -138,7 +139,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 16px;
             flex-shrink: 0;
             box-shadow: var(--shadow);
             z-index: 100;
@@ -149,24 +150,78 @@
             background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
         }
 
-        .app-header h1 { font-size: 1.25rem; font-weight: 700; }
-        .app-header .stats { font-size: 0.75rem; opacity: 0.95; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; text-align: right; max-width: 50%; }
+        .app-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
 
-        /* BUSCADOR FIJO */
+        .app-header h1 { 
+            font-size: 1.2rem; 
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .app-header .stats { 
+            font-size: 0.7rem; 
+            opacity: 0.95; 
+            background: rgba(255,255,255,0.2); 
+            padding: 3px 8px; 
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        /* ✅ BOTONES DEL HEADER */
+        .header-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .header-btn:active {
+            background: rgba(255,255,255,0.25);
+            transform: scale(0.9);
+        }
+
+        .header-btn.active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* BUSCADOR DESPLEGABLE */
         .search-bar {
             height: var(--search-height);
             background: var(--card);
-            padding: 16px 20px;
+            padding: 0 20px;
             flex-shrink: 0;
             box-shadow: var(--shadow);
             z-index: 99;
-            overflow-y: auto;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+
+        .search-bar.expanded {
+            height: var(--search-height-expanded);
+            padding: 16px 20px;
+            opacity: 1;
         }
 
         .search-input-wrapper {
             display: flex;
             gap: 10px;
             margin-bottom: 12px;
+            align-items: center;
         }
 
         .search-input-wrapper input {
@@ -185,7 +240,29 @@
             border-color: var(--primary);
         }
 
-        /* ✅ FILTROS DE FECHA MEJORADOS */
+        /* ✅ BOTÓN CERRAR BUSCADOR */
+        .btn-close-search {
+            background: var(--border);
+            border: none;
+            color: var(--text-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .btn-close-search:active {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* FILTROS DE FECHA */
         .search-filters {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -200,7 +277,7 @@
         }
 
         .search-filters .date-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-light);
             font-weight: 500;
             margin-bottom: 4px;
@@ -210,7 +287,7 @@
 
         .search-filters input[type="date"],
         .search-filters select {
-            padding: 11px 14px;
+            padding: 10px 12px;
             border: 2px solid var(--border);
             border-radius: var(--radius-sm);
             font-size: 0.85rem;
@@ -227,7 +304,6 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
         }
 
-        /* Fix para placeholders de fecha en móviles */
         .search-filters input[type="date"] {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -252,12 +328,12 @@
 
         .btn-clear-filters {
             width: 100%;
-            padding: 9px;
+            padding: 8px;
             background: transparent;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             color: var(--text-light);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             cursor: pointer;
             margin-top: 8px;
         }
@@ -350,7 +426,7 @@
         .app-footer {
             height: var(--footer-height);
             background: var(--card);
-            padding: 12px 20px 20px;
+            padding: 12px 20px 16px;
             flex-shrink: 0;
             box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
             z-index: 100;
@@ -407,7 +483,7 @@
             padding: 12px 16px;
             border: none;
             border-radius: var(--radius-sm);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -421,7 +497,7 @@
         .btn-warning { background: var(--warning); color: white; }
         .btn-secondary { background: var(--border); color: var(--text); }
         .btn-ghost { background: transparent; color: var(--text-light); }
-        .btn-sm { padding: 10px 12px; font-size: 0.85rem; }
+        .btn-sm { padding: 10px 12px; font-size: 0.8rem; }
         .btn-full { width: 100%; }
         .btn-icon { padding: 8px; border-radius: 50%; }
         
@@ -608,28 +684,18 @@
             .modal.active .modal-content { transform: scale(0.95); }
         }
 
-        /* ✅ RESPONSIVE PARA MÓVILES PEQUEÑOS */
         @media (max-width: 360px) {
-            .search-bar {
-                padding: 14px 16px;
-            }
-            
+            .app-header h1 { font-size: 1.1rem; }
             .search-filters input[type="date"],
             .search-filters select {
                 font-size: 0.8rem;
-                padding: 10px 12px;
+                padding: 9px 10px;
             }
-            
             .search-filters .date-label {
-                font-size: 0.65rem;
-            }
-            
-            .search-filters {
-                gap: 8px;
+                font-size: 0.6rem;
             }
         }
 
-        /* ✅ iOS SAFARI - EVITAR ZOOM AUTOMÁTICO */
         @supports (-webkit-touch-callout: none) {
             .search-filters input[type="date"],
             .search-filters select {
@@ -686,31 +752,38 @@
     <!-- APP PRINCIPAL -->
     <div id="app-screen" class="screen">
         
-        <!-- HEADER FIJO -->
+        <!-- HEADER FIJO CON BOTÓN DE BÚSQUEDA -->
         <header class="app-header" id="app-header">
-            <h1>📦 GarantíaBox</h1>
-            <span class="stats" id="stats-text">0 productos</span>
+            <div class="app-header-left">
+                <h1>📦 GarantíaBox</h1>
+                <span class="stats" id="stats-text">0 productos</span>
+            </div>
+            <!-- ✅ BOTÓN DE BÚSQUEDA -->
+            <button class="header-btn" id="btn-search" onclick="toggleSearch()" title="Buscar">
+                🔍
+            </button>
         </header>
 
-        <!-- ✅ BUSCADOR FIJO CORREGIDO -->
-        <div class="search-bar">
+        <!-- ✅ BUSCADOR DESPLEGABLE -->
+        <div class="search-bar" id="search-bar">
             <div class="search-input-wrapper">
                 <input type="text" id="search-text" placeholder="🔍 Buscar producto..." oninput="renderItems()">
+                <button class="btn-close-search" onclick="toggleSearch()" title="Cerrar búsqueda">
+                    ✕
+                </button>
             </div>
             
-            <!-- FILTROS DE FECHA CON LABELS CLAROS -->
             <div class="search-filters">
                 <div class="date-input-wrapper">
-                    <label class="date-label">📅 Desde (inicio)</label>
+                    <label class="date-label">📅 Desde</label>
                     <input type="date" id="filter-date-start" onchange="renderItems()">
                 </div>
                 <div class="date-input-wrapper">
-                    <label class="date-label">📅 Hasta (fin)</label>
+                    <label class="date-label">📅 Hasta</label>
                     <input type="date" id="filter-date-end" onchange="renderItems()">
                 </div>
             </div>
             
-            <!-- OTROS FILTROS -->
             <div class="search-filters">
                 <select id="sort-by" onchange="renderItems()">
                     <option value="newest">Más recientes</option>
@@ -832,7 +905,7 @@
         // CONFIGURACIÓN Y ESTADO GLOBAL
         // ============================================
         let USER_PIN = localStorage.getItem('garantiaBox_pin') || '1234';
-        let currentFilter = 'active';
+        let isSearchExpanded = false;
         const ONBOARDING_SLIDES = [
             {
                 icon: '📦',
@@ -896,6 +969,34 @@
             } else {
                 btn.classList.remove('btn-loading');
                 btn.disabled = false;
+            }
+        }
+
+        // ============================================
+        // ✅ BÚSQUEDA DESPLEGABLE
+        // ============================================
+        function toggleSearch() {
+            const searchBar = document.getElementById('search-bar');
+            const searchBtn = document.getElementById('btn-search');
+            const searchInput = document.getElementById('search-text');
+            
+            isSearchExpanded = !isSearchExpanded;
+            
+            if(isSearchExpanded) {
+                searchBar.classList.add('expanded');
+                searchBtn.classList.add('active');
+                // Focus automático al input
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 300);
+            } else {
+                searchBar.classList.remove('expanded');
+                searchBtn.classList.remove('active');
+                // Limpiar búsqueda al cerrar
+                setTimeout(() => {
+                    searchInput.value = '';
+                    renderItems();
+                }, 300);
             }
         }
 
