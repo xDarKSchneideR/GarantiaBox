@@ -28,9 +28,9 @@
             
             /* Alturas fijas */
             --header-height: 60px;
-            --search-height: 0px;  /* ✅ OCULTO POR DEFECTO */
-            --search-height-expanded: 240px;  /* ✅ ALTURA CUANDO SE EXPANDE */
-            --footer-height: 140px;  /* ✅ REDUCIDO para más espacio */
+            --search-height: 0px;
+            --search-height-expanded: 240px;
+            --footer-height: 185px;
         }
 
         /* MODO OSCURO */
@@ -172,7 +172,7 @@
             white-space: nowrap;
         }
 
-        /* ✅ BOTONES DEL HEADER */
+        /* BOTONES DEL HEADER */
         .header-btn {
             background: rgba(255,255,255,0.15);
             border: none;
@@ -240,7 +240,7 @@
             border-color: var(--primary);
         }
 
-        /* ✅ BOTÓN CERRAR BUSCADOR */
+        /* BOTÓN CERRAR BUSCADOR */
         .btn-close-search {
             background: var(--border);
             border: none;
@@ -758,13 +758,12 @@
                 <h1>📦 GarantíaBox</h1>
                 <span class="stats" id="stats-text">0 productos</span>
             </div>
-            <!-- ✅ BOTÓN DE BÚSQUEDA -->
             <button class="header-btn" id="btn-search" onclick="toggleSearch()" title="Buscar">
                 🔍
             </button>
         </header>
 
-        <!-- ✅ BUSCADOR DESPLEGABLE -->
+        <!-- BUSCADOR DESPLEGABLE -->
         <div class="search-bar" id="search-bar">
             <div class="search-input-wrapper">
                 <input type="text" id="search-text" placeholder="🔍 Buscar producto..." oninput="renderItems()">
@@ -918,9 +917,9 @@
                 text: 'Toma fotos de tus recibos y guárdalas con cada producto. Las imágenes se comprimen automáticamente.'
             },
             {
-                icon: '🔔',
-                title: 'Alertas de Caducidad',
-                text: 'Te avisaremos cuando una garantía esté a punto de caducar. ¡Nunca más perderás una reclamación!'
+                icon: '📱',
+                title: 'Instalar como App',
+                text: 'Para mejor experiencia, instala la app en tu pantalla de inicio. Así tus datos siempre estarán en el mismo lugar.'
             },
             {
                 icon: '🔐',
@@ -973,7 +972,7 @@
         }
 
         // ============================================
-        // ✅ BÚSQUEDA DESPLEGABLE
+        // BÚSQUEDA DESPLEGABLE
         // ============================================
         function toggleSearch() {
             const searchBar = document.getElementById('search-bar');
@@ -985,18 +984,48 @@
             if(isSearchExpanded) {
                 searchBar.classList.add('expanded');
                 searchBtn.classList.add('active');
-                // Focus automático al input
                 setTimeout(() => {
                     searchInput.focus();
                 }, 300);
             } else {
                 searchBar.classList.remove('expanded');
                 searchBtn.classList.remove('active');
-                // Limpiar búsqueda al cerrar
                 setTimeout(() => {
                     searchInput.value = '';
                     renderItems();
                 }, 300);
+            }
+        }
+
+        // ============================================
+        // ✅ PERSISTENCIA DE DATOS
+        // ============================================
+        
+        // Recordatorio automático de backup
+        function checkBackupReminder() {
+            const lastBackup = localStorage.getItem('garantiaBox_lastBackup');
+            const itemsCount = getItems().length;
+            const now = Date.now();
+            const daysSinceBackup = lastBackup ? (now - parseInt(lastBackup)) / (1000 * 60 * 60 * 24) : 999;
+            
+            if(itemsCount >= 5 && daysSinceBackup > 7) {
+                setTimeout(() => {
+                    if(confirm('📦 Tienes ' + itemsCount + ' productos sin backup desde hace ' + Math.round(daysSinceBackup) + ' días.\n\n¿Quieres hacer una copia de seguridad ahora?')) {
+                        exportData();
+                    }
+                }, 3000);
+            }
+        }
+
+        // Advertencia sobre almacenamiento por navegador
+        function showBrowserWarning() {
+            const warned = localStorage.getItem('garantiaBox_browserWarning');
+            
+            if(!warned && getItems().length > 0) {
+                setTimeout(() => {
+                    alert('💡 CONSEJO: Tus datos se guardan solo en ESTE navegador.\n\nPara no perderlos:\n• Haz backup regularmente\n• O instala la app en tu pantalla de inicio\n• Usa siempre el mismo navegador');
+                    localStorage.setItem('garantiaBox_browserWarning', 'true');
+                }, 5000);
             }
         }
 
@@ -1080,6 +1109,11 @@
                                 }
                             }, 1000);
                         }
+                        
+                        // ✅ Advertencia de navegador después del login
+                        setTimeout(() => {
+                            showBrowserWarning();
+                        }, 2000);
                         
                         pinInput.value = '';
                         hideMessage('login-message');
@@ -1479,6 +1513,9 @@
                 `;
                 list.appendChild(div);
             });
+
+            // ✅ Recordatorio de backup
+            checkBackupReminder();
         }
 
         function escapeHtml(text) {
@@ -1508,7 +1545,7 @@
         }
 
         // ============================================
-        // BACKUP
+        // BACKUP CON TIMESTAMP
         // ============================================
         function exportData() {
             const data = localStorage.getItem('garantiaBox_data');
@@ -1521,6 +1558,8 @@
             a.href = URL.createObjectURL(blob);
             a.download = `garantias_backup_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
+            // ✅ Registrar timestamp del backup
+            localStorage.setItem('garantiaBox_lastBackup', Date.now().toString());
             showToast('💾 Backup descargado', 'success');
         }
 
