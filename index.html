@@ -1599,5 +1599,45 @@
             });
         });
     </script>
+    <!-- ============================================
+     REGISTRO DE SERVICE WORKER
+     ============================================ -->
+    <script>
+        // Registrar Service Worker
+        if('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('✅ SW registrado:', registration.scope);
+                        
+                        // Verificar actualizaciones
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if(newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Nueva versión disponible
+                                    if(confirm('🔄 Hay una actualización disponible. ¿Quieres recargar?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('❌ Error registrando SW:', error);
+                    });
+            });
+        }
+        
+        // Detectar cambios de conexión
+        window.addEventListener('online', () => {
+            showToast('🌐 Conexión restaurada', 'success');
+        });
+        
+        window.addEventListener('offline', () => {
+            showToast('📡 Sin conexión - Modo offline', 'warning', 5000);
+        });
+    </script>
 </body>
 </html>
